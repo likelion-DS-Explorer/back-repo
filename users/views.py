@@ -2,6 +2,8 @@ from django.shortcuts import render
 from .models import Profile
 from rest_framework import generics,status
 from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
+from django.contrib.auth import authenticate
+from rest_framework.response import Response
 
 # 회원가입 뷰
 class RegisterView(generics.CreateAPIView):
@@ -18,7 +20,7 @@ class LoginView(generics.GenericAPIView):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            Login(request, user)
+            LoginSerializer(request, user)
             return Response({"message":"로그인 성공"}, status=status.HTTP_200_OK)
         else:
             return Response({"message":"사용자 이름 또는 비밀번호가 맞지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
