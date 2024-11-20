@@ -40,7 +40,27 @@ class LoginSerializer(serializers.Serializer):
 
 
 # 프로필 정보 확인
-class ProfileSerializer(serializers.ModelField):
+class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ('image', 'nickname', 'student_id', 'major', '')
+        fields = ('image', 'nickname', 'student_id', 'major')
+
+    # 닉네임 중복 검사
+    def validate_nickname(self, value):
+        request_user = self.instance
+        
+        # 다른 사용자의 닉네임과 중복되는지 확인
+        if Profile.objects.filter(nickname=value).exclude(id=request_user.id).exists():
+            raise serializers.ValidationError("이미 존재하는 닉네임입니다.")
+        
+        return value
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.nickname = validated_data.get('nickname', instance.nickname)
+        instance.image = validated_data.get('image', instance.image)
+        instance.student_id = validated_data.get('student_id', instance.student_id)
+        instance.major = validated_data.get('major', instance.major)
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
+        return instance
