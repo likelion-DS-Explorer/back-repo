@@ -39,7 +39,10 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         user = authenticate(**data)
         if user:
-            token = Token.objects.get(user=user)
+            token, created = Token.objects.get_or_create(user=user)
+            if not created:
+                token.delete()
+                token = Token.objects.create(user=user)
             return token
         raise serializers.ValidationError(
             {
