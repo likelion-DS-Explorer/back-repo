@@ -3,6 +3,7 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -32,14 +33,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
+    username = serializers.EmailField(required=True)
     password = serializers.CharField(required=True)
 
     def validate(self, data):
-        user = authenticate(request=self.context.get('request'), email=data['email'], password=data['password'])
-        if not user:
-            raise serializers.ValidationError("잘못된 이메일 또는 비밀번호입니다.")
-        return data
+        user = authenticate(**data)
+        if user:
+            token = Token.objects.get(user=user)
+            return token
+        raise serializers.ValidationError(
+            {
+                "error":"잘못된 이메일 또는 비밀번호입니다."
+            }
+        )
 
 
 # 프로필 정보 확인
