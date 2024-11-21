@@ -2,6 +2,7 @@ from .models import Profile
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
+from rest_framework.authtoken.models import Token
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -26,6 +27,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             student_id=validated_data['student_id'],
             cp_number=validated_data['cp_number']
         )
+        user.save()
+        token = Token.objects.create(user=user)
         return user
 
 class LoginSerializer(serializers.Serializer):

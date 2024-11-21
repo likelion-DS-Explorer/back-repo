@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'news',
 
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
 ]
 
@@ -63,6 +64,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
 
 ROOT_URLCONF = 'project.urls'
 
