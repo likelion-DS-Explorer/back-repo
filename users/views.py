@@ -33,6 +33,7 @@ class LogoutView(APIView):
 
 # 프로필 
 class ProfileView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     lookup_field = 'student_id'
