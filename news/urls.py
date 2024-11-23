@@ -6,5 +6,5 @@ router = routers.SimpleRouter()
 
 urlpatterns = [
     path('', NewsViewSet.as_view({'get': 'list', 'post': 'create'}), name='news'),
-    path('<int:pk>/', NewsViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='news-deatil')
+    path('<int:pk>/', NewsViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='news-deatil'),
 ]
