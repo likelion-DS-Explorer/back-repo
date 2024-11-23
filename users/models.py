@@ -30,6 +30,8 @@ class Profile(AbstractUser):
     nickname = models.CharField(max_length=50)
     cp_number = models.CharField(max_length=11, validators=[MinLengthValidator(11), MaxLengthValidator(11)])
     image = models.ImageField(upload_to='upload_filepath', default='default.png')
+    is_manager = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
