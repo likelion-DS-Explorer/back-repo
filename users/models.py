@@ -26,7 +26,7 @@ class Profile(AbstractUser):
     email = models.EmailField(_('email address'), unique=True)
     name = models.CharField(max_length=10)
     major = models.CharField(max_length=15)
-    student_id = models.CharField(max_length=8, validators=[MinLengthValidator(8), MaxLengthValidator(8)])
+    student_id = models.CharField(max_length=8, validators=[MinLengthValidator(8), MaxLengthValidator(8)], unique=True)
     nickname = models.CharField(max_length=50)
     cp_number = models.CharField(max_length=11, validators=[MinLengthValidator(11), MaxLengthValidator(11)])
     image = models.ImageField(upload_to='upload_filepath', default='default.png')
