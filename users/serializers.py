@@ -10,7 +10,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Profile
-        fields = ('email', 'password', 'nickname', 'name', 'major', 'student_id', 'cp_number')
+        fields = ('email', 'password', 'nickname', 'name', 'major', 'student_id', 'cp_number', 'is_manager')
         extra_kwargs = {'email': {'required': True}}
 
     def validate_email(self, value):
@@ -26,7 +26,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             name=validated_data['name'],
             major=validated_data['major'],
             student_id=validated_data['student_id'],
-            cp_number=validated_data['cp_number']
+            cp_number=validated_data['cp_number'],
+            is_manager=validated_data['is_manager']
         )
         user.save()
         token = Token.objects.create(user=user)
@@ -53,9 +54,11 @@ class LoginSerializer(serializers.Serializer):
 
 # 프로필 정보 확인
 class ProfileSerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+
     class Meta:
         model = Profile
-        fields = ('image', 'nickname', 'student_id', 'major')
+        fields = ('image', 'nickname', 'student_id', 'major', 'created_at')
 
     # 닉네임 중복 검사
     def validate_nickname(self, value):
@@ -74,5 +77,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         instance.student_id = validated_data.get('student_id', instance.student_id)
         instance.major = validated_data.get('major', instance.major)
         instance.email = validated_data.get('email', instance.email)
+        instance.is_manager = validated_data.get('is_manager', instance.is_manager)
+        instance.created_at = validated_data.get("created_at", instance.created_at)
         instance.save()
         return instance
