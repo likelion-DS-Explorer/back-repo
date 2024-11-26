@@ -17,18 +17,17 @@ class NewsViewSet(viewsets.ModelViewSet):
         return NewsCreateUpdateSerializer
 
     def get_queryset(self):
-        return News.objects.filter(is_draft=False)
+        return News.objects.all()
 
     def list(self, request, pk=None):
         serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response({"message":"뉴스 조회에 성공하였습니다.", "result":serializer.data}, status=status.HTTP_200_OK)
 
     def create(self, request):
-        is_draft = request.data.get('is_draft', False)
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(is_draft=is_draft)
-            message = "뉴스 임시저장에 성공하였습니다." if is_draft else "뉴스 등록에 성공하였습니다."
+            serializer.save()
+            message = "뉴스 등록에 성공하였습니다."
             return Response({"message": message, "result": serializer.data}, status=status.HTTP_201_CREATED)
         return Response({"message":"뉴스 생성에 실패하였습니다.", "result":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -36,9 +35,8 @@ class NewsViewSet(viewsets.ModelViewSet):
         news = get_object_or_404(News, pk=pk)
         serializer = self.get_serializer(news, data=request.data)
         if serializer.is_valid():
-            is_draft = request.data.get('is_draft', news.is_draft)
-            serializer.save(is_draft=is_draft)
-            message = "뉴스 임시저장에 성공했습니다." if is_draft else "뉴스 수정에 성공했습니다."
+            serializer.save()
+            message = "뉴스 수정에 성공했습니다."
             return Response({"message": message, "result": serializer.data}, status=status.HTTP_200_OK)
         return Response({"message": "뉴스 수정에 실패했습니다.", "result": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
