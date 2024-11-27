@@ -1,12 +1,12 @@
 from django.urls import path, include
-from rest_framework import routers
-from .views import *
+from rest_framework.routers import SimpleRouter
+from .views import ClubRecruitViewSet
 
-app_name = "recruit"
+app_name = 'recruit'
 
-default_router = routers.SimpleRouter()
-default_router.register("club-recruit", ClubRecruitViewSet)
+router = SimpleRouter()
+router.register('club-recruit', ClubRecruitViewSet, basename='club-recruit')
 
 urlpatterns = [
-    path("", include(default_router.urls)),
+    path('', include(router.urls)),
 ]
