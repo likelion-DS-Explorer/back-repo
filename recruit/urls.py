@@ -5,7 +5,7 @@ from .views import ClubRecruitViewSet
 app_name = 'recruit'
 
 router = SimpleRouter()
-router.register('club-recruit', ClubRecruitViewSet, basename='club-recruit')
+router.register('', ClubRecruitViewSet, basename='club-recruit')
 
 urlpatterns = [
     path('', include(router.urls)),
