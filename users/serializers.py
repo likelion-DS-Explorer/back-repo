@@ -1,4 +1,4 @@
-from .models import Profile
+from .models import Profile, Inquiry
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
@@ -81,3 +81,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         instance.created_at = validated_data.get("created_at", instance.created_at)
         instance.save()
         return instance
+
+class InquirySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Inquiry
+        fields = ['id', 'inquiryClub', 'content']
