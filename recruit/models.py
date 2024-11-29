@@ -1,5 +1,6 @@
 from django.db import models
 from multiselectfield import MultiSelectField
+from django.contrib.auth import get_user_model
 
 class ClubRecruit(models.Model):
     CATEGORY_CHOICES = [
@@ -61,8 +62,38 @@ class ClubRecruit(models.Model):
     title = models.CharField(max_length=80)
     content = models.TextField()
 
+    scrap_count = models.PositiveBigIntegerField(default=0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
+    
+class RecruitScrap(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    recruit = models.ForeignKey('ClubRecruit', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'recruit'], name='unique_user_recruit')
+        ]
+
+    def save(self, *args, **kwargs):
+        is_new = not self.pk
+        super().save(*args, **kwargs)
+        if is_new:
+            self.recruit.scrap_count += 1
+        else:
+            self.recruit.scrap_count -= 1
+        self.recruit.save()
+
+    def delete(self, *args, **kwargs):
+        recruit = self.recruit
+        super().delete(*args, **kwargs)
+        recruit.scrap_count -= 1
+        recruit.save()
+
+    def __str__(self):
+        return f"{self.user} → {self.recruit} 스크랩"
