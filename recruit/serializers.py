@@ -3,6 +3,8 @@ from .models import *
 from datetime import date
 
 class ClubRecruitSerializer(serializers.ModelSerializer):
+    days = serializers.MultipleChoiceField(choices=ClubRecruit.DAYS_CHOICES)
+    
     class Meta:
         model = ClubRecruit
         fields = '__all__'
