@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ClubRecruit
+from .models import *
 from datetime import date
 
 class ClubRecruitSerializer(serializers.ModelSerializer):
@@ -20,3 +20,8 @@ class ClubRecruitListSerializer(serializers.ModelSerializer):
     def get_d_day(self, obj):
         d_day = (obj.end_doc - date.today()).days
         return d_day if d_day >=0 else "마감"
+    
+class RecruitScrapSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecruitScrap
+        fields = ['id', 'user', 'recruit', 'created_at']
