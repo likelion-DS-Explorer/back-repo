@@ -45,6 +45,7 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 # 1:1 문의
 class InquiryViewSet(viewsets.ModelViewSet):
     serializer_class = InquirySerializer
+    permission_classes = [IsAuthenticated]
 
     def create(self, request):
         serializer = self.get_serializer(data=request.data)

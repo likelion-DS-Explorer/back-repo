@@ -3,6 +3,7 @@ from django.db import models
 from django.core.validators import MinLengthValidator, MaxLengthValidator
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
+from multiselectfield import MultiSelectField
 
 # username을 email로 바꿈
 class CustomUserManager(BaseUserManager):
@@ -66,7 +67,7 @@ class Profile(AbstractUser):
     nickname = models.CharField(max_length=50)
     cp_number = models.CharField(max_length=11, validators=[MinLengthValidator(11), MaxLengthValidator(11)])
     image = models.ImageField(upload_to='upload_filepath', default='default.png')
-    is_manager = models.CharField(max_length=20, blank=True, choices=CLUB_CHOICES)
+    is_manager = MultiSelectField(max_length=20, blank=True, choices=CLUB_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'
