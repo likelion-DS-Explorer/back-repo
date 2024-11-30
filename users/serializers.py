@@ -81,8 +81,3 @@ class ProfileSerializer(serializers.ModelSerializer):
         instance.created_at = validated_data.get("created_at", instance.created_at)
         instance.save()
         return instance
-
-class InquirySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Inquiry
-        fields = ['id', 'inquiryClub', 'content']

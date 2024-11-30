@@ -41,16 +41,3 @@ class ProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         student_id = self.kwargs.get('student_id')
         return get_object_or_404(Profile, student_id=student_id)
-
-# 1:1 문의
-class InquiryViewSet(viewsets.ModelViewSet):
-    serializer_class = InquirySerializer
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            message = "문의가 성공적으로 제출되었습니다! \n 운영진이 확인 후 빠르게 답변드리겠습니다. 감사합니다."
-            return Response({"message": message, "result": serializer.data}, status=status.HTTP_201_CREATED)
-        return Response({"message":"문의 제출에 실패했습니다.", "result":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
