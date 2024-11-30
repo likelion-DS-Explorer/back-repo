@@ -3,14 +3,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from news.permissions import IsManagerOrReadOnly
 from django.shortcuts import get_object_or_404
-from .models import ClubRecruit
+from .models import *
 from .serializers import *
 
 class ClubRecruitViewSet(viewsets.ModelViewSet):
     queryset = ClubRecruit.objects.all()
     serializer_class = ClubRecruitSerializer
-    permission_classes = [AllowAny] # 테스트용
+    # permission_classes = [AllowAny] # 테스트용
+    permission_classes = [IsManagerOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save()
