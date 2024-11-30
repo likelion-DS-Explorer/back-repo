@@ -1,4 +1,4 @@
-from .models import Profile, Inquiry
+from .models import Profile
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404

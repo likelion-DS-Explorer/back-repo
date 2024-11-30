@@ -1,8 +1,8 @@
 from django.shortcuts import render
-from .models import Profile, Inquiry
+from .models import Profile
 from rest_framework import generics, status, viewsets
-from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer, InquirySerializer
-from django.contrib.auth import authenticate
+from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
+from django.contrib.auth import authenticate, update_session_auth_hash
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
