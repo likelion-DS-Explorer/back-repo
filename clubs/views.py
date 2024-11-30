@@ -15,9 +15,27 @@ class ClubViewSet(viewsets.ModelViewSet):
     permission_classes = [IsManagerOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save()
+        user = self.request.user
+        is_manager_club = user.is_manager
+        club_name = self.request.data.get("name")
+
+        print(user)
+        print(is_manager_club)
+        print(club_name)
+
+        if club_name != is_manager_club:
+            raise serializers.ValidationError("해당 동아리에 대해 동아리 탐험 글을 생성할 권한이 없습니다.")
+
+        if Club.objects.filter(is_manager_club=club_name).exists():
+            raise serializers.ValidationError("이미 해당 동아리의 탐험 글이 존재합니다.")
 
     def perform_update(self, serializer):
+        user = self.request.user
+        club = self.get_object()
+
+        if club.name != user.is_manager:
+            raise serializers.ValidationError("해당 동아리에 대해 동아리 탐험 글을 생성할 권한이 없습니다.")
+        
         serializer.save()
 
     def list(self, request, pk=None):
