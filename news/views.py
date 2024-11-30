@@ -26,7 +26,7 @@ class NewsViewSet(viewsets.ModelViewSet):
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(author=request.user)
             message = "뉴스 등록에 성공하였습니다."
             return Response({"message": message, "result": serializer.data}, status=status.HTTP_201_CREATED)
         return Response({"message":"뉴스 생성에 실패하였습니다.", "result":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

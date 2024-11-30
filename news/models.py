@@ -1,4 +1,5 @@
 from django.db import models
+from users.models import Profile
 
 class News(models.Model):
     NEWS_CHOICES = [
@@ -12,6 +13,7 @@ class News(models.Model):
     image = models.ImageField(upload_to='upload_filepath', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='news')
 
     def __str__(self):
         return self.title

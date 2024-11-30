@@ -12,4 +12,4 @@ class NewsSerializer(serializers.ModelSerializer):
 class NewsCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
-        fields = ['id', 'news_type', 'title', 'content', 'image']
+        exclude = ['author']
