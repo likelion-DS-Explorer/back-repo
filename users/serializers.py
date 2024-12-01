@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.utils import timezone
+from clubs.models import Club
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -60,7 +61,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('image', 'nickname', 'student_id', 'major', 'club', 'created_at', 'updated_at')
+        fields = ('image', 'name', 'nickname', 'student_id', 'major', 'club', 'created_at', 'updated_at')
 
     # 닉네임 중복 검사
     def validate_nickname(self, value):
@@ -123,14 +124,31 @@ class editPostSerialzier(serializers.ModelSerializer):
     def get_updated_at(self, obj):
         return obj.updated_at
 
-# 동아리원 추가
-class AddClubMemberSerializer(serializers.Serializer):
-    search_type = serializers.ChoiceField(choices=[('name', '이름'), ('student_id', '학번')])
-    search_term = serializers.CharField()
-    club_code = serializers.ChoiceField(choices=Profile.CLUB_CHOICES)
+# 내가 속한 동아리
+class UserClubSerializer(serializers.ModelSerializer):
+    #join_date = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
+    club = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+    #activity_period = serializers.SerializerMethodField()
 
-    def validate_club_code(self, value):
-        valid_codes = [choice[0] for choice in Profile.CLUB_CHOICES]
-        if value not in valid_codes:
-            raise serializers.ValidationError("유효하지 않은 동아리 코드입니다.")
-        return value
+    class Meta:
+        model = Profile
+        fields = ['role', 'club', 'category']
+
+    def get_role(self, obj):
+        if obj.is_manager:
+            return '운영진'
+        elif obj.club:
+            return '회원'
+        return None
+
+    def get_category(self, obj):
+        if hasattr(obj, 'category'):
+            return obj.category.name
+        return None
+
+    def get_club(self, obj):
+        if obj.club:
+            return [{'name': obj.club}]
+        return []

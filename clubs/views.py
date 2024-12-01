@@ -65,3 +65,71 @@ class ClubLikeViewSet(viewsets.ModelViewSet):
 
         club.refresh_from_db()
         return Response({"message": message, "likes_count": club.likes_count}, status=status_code)
+
+def check_user_membership(user, club_code):
+    return club_code in user.club.split(',') if user.club else False
+
+def add_member_to_club(user, club_code):
+    if user.club:
+        user.club += f",{club_code}"
+    else:
+        user.club = club_code
+    user.save()
+    return True
+
+# 동아리원 추가
+class AddClubMemberView(viewsets.ModelViewSet):
+    serializer_class = AddClubMemberSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ProfileViewSerializer
+        return AddClubMemberSerializer
+
+    def get_queryset(self):
+        club_code = self.kwargs.get('club_code')
+        return Profile.objects.filter(club=club_code)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            {"message": "동아리원 조회에 성공하였습니다.", "result": serializer.data},
+            status=status.HTTP_200_OK
+        )
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        search_type = serializer.validated_data['search_type']
+        search_term = serializer.validated_data['search_term']
+        club_code = serializer.validated_data['club_code']
+
+        try:
+            if search_type == 'name':
+                user_to_add = Profile.objects.get(name=search_term)
+            else:  # student_id
+                user_to_add = Profile.objects.get(student_id=search_term)
+            
+            club_name = dict(Profile.CLUB_CHOICES).get(club_code)
+        except Profile.DoesNotExist:
+            if search_type == 'name':
+                error_message = "해당 이름의 사용자를 찾을 수 없습니다."
+            else:
+                error_message = "해당 학번의 사용자를 찾을 수 없습니다."
+            return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
+            
+            if not club_name:
+                return Response({"error": "해당 코드의 동아리를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+        if club_code not in request.user.is_manager:
+            return Response({"error": "해당 동아리의 관리자가 아닙니다."}, status=status.HTTP_403_FORBIDDEN)
+
+        if check_user_membership(user_to_add, club_code):
+            return Response({"error": "이미 동아리원입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        success = add_member_to_club(user_to_add, club_code)
+
+        return Response({"message": f"{user_to_add.name}님을 동아리원으로 추가했습니다."}, status=status.HTTP_201_CREATED)

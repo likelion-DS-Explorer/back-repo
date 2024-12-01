@@ -10,4 +10,5 @@ router.register('', ClubViewSet, basename='club')
 urlpatterns = [
     path('', include(router.urls)),
     path('<int:pk>/like/', ClubLikeViewSet.as_view({'post': 'like'}), name='club-like'),
+    path('<str:club_code>/members/', AddClubMemberView.as_view({'get': 'list', 'post': 'create'}), name='club-members'),
 ]

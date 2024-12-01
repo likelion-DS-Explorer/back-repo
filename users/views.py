@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from .models import Profile
 from rest_framework import generics, status, viewsets
-from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer, editPostSerialzier, AddClubMemberSerializer
+from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer, editPostSerialzier,UserClubSerializer
 from django.contrib.auth import authenticate, update_session_auth_hash
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -72,44 +72,16 @@ class editPostViewset(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-
-# 동아리원 추가
-class AddClubMemberView(generics.CreateAPIView):
-    serializer_class = AddClubMemberSerializer
+class UserClubsView(generics.GenericAPIView):
+    serializer_class = UserClubSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = 'student_id'
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    def get_queryset(self):
+        student_id = self.kwargs.get('student_id')
+        user = get_object_or_404(Profile, student_id=student_id)
 
-        search_type = serializer.validated_data['search_type']
-        search_term = serializer.validated_data['search_term']
-        club_code = serializer.validated_data['club_code']
-
-        try:
-            if search_type == 'name':
-                user_to_add = Profile.objects.get(name=search_term)
-            else:  # student_id
-                user_to_add = Profile.objects.get(student_id=search_term)
-            
-            club_name = dict(Profile.CLUB_CHOICES).get(club_code)
-        except Profile.DoesNotExist:
-            if search_type == 'name':
-                error_message = "해당 이름의 사용자를 찾을 수 없습니다."
-            else:
-                error_message = "해당 학번의 사용자를 찾을 수 없습니다."
-            return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
-            
-            if not club_name:
-                return Response({"error": "해당 코드의 동아리를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
-        if club_code not in request.user.is_manager:
-            return Response({"error": "해당 동아리의 관리자가 아닙니다."}, status=status.HTTP_403_FORBIDDEN)
-
-        if user_to_add.club:
-            user_to_add.club += f",{club_code}"
-        else:
-            user_to_add.club = club_code
-        user_to_add.save()
-
-        return Response({"message": f"{user_to_add.name}님을 동아리원으로 추가했습니다."}, status=status.HTTP_201_CREATED)
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        serializer = UserClubSerializer(user)
+        return Response({"message":"소속 동아리 조회에 성공했습니다.", "reslut":serializer.data}, status=status.HTTP_201_CREATED)
