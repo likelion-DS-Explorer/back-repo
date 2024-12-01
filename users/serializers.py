@@ -56,10 +56,11 @@ class LoginSerializer(serializers.Serializer):
 # 프로필 정보 확인
 class ProfileSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
 
     class Meta:
         model = Profile
-        fields = ('image', 'nickname', 'student_id', 'major', 'created_at')
+        fields = ('image', 'nickname', 'student_id', 'major', 'club', 'created_at', 'updated_at')
 
     # 닉네임 중복 검사
     def validate_nickname(self, value):
@@ -121,3 +122,15 @@ class editPostSerialzier(serializers.ModelSerializer):
 
     def get_updated_at(self, obj):
         return obj.updated_at
+
+# 동아리원 추가
+class AddClubMemberSerializer(serializers.Serializer):
+    search_type = serializers.ChoiceField(choices=[('name', '이름'), ('student_id', '학번')])
+    search_term = serializers.CharField()
+    club_code = serializers.ChoiceField(choices=Profile.CLUB_CHOICES)
+
+    def validate_club_code(self, value):
+        valid_codes = [choice[0] for choice in Profile.CLUB_CHOICES]
+        if value not in valid_codes:
+            raise serializers.ValidationError("유효하지 않은 동아리 코드입니다.")
+        return value
