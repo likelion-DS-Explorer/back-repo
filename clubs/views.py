@@ -69,6 +69,7 @@ class ClubLikeViewSet(viewsets.ModelViewSet):
 def check_user_membership(user, club_code):
     return club_code in user.club.split(',') if user.club else False
 
+# 동아리원 추가
 def add_member_to_club(user, club_code):
     if user.club:
         user.club += f",{club_code}"
@@ -77,7 +78,17 @@ def add_member_to_club(user, club_code):
     user.save()
     return True
 
-# 동아리원 추가
+def check_user_membership(user, club_code):
+    return club_code in user.club.split(',') if user.club else False
+
+# 동아리원 삭제
+def remove_member_from_club(user, club_code):
+    clubs = user.club.split(',')
+    clubs.remove(club_code)
+    user.club = ','.join(clubs) if clubs else ''
+    user.save()
+
+# 동아리원
 class AddClubMemberView(viewsets.ModelViewSet):
     serializer_class = AddClubMemberSerializer
     permission_classes = [IsAuthenticated]
@@ -133,3 +144,23 @@ class AddClubMemberView(viewsets.ModelViewSet):
         success = add_member_to_club(user_to_add, club_code)
 
         return Response({"message": f"{user_to_add.name}님을 동아리원으로 추가했습니다."}, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        student_id = kwargs.get('student_id')  
+        club_code = self.kwargs.get('club_code')
+
+        try:
+            user_to_remove = Profile.objects.get(student_id=student_id)
+            
+            if club_code not in request.user.is_manager:
+                return Response({"error": "해당 동아리의 관리자가 아닙니다."}, status=status.HTTP_403_FORBIDDEN)
+
+            if not check_user_membership(user_to_remove, club_code):
+                return Response({"error": "해당 사용자는 이 동아리에 속해 있지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+            remove_member_from_club(user_to_remove, club_code)
+            
+            return Response({"message": f"{user_to_remove.name}님을 동아리에서 제거했습니다."}, status=status.HTTP_200_OK)
+
+        except Profile.DoesNotExist:
+            return Response({"error": "해당 사용자를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
