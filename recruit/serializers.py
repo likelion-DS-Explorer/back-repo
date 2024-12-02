@@ -24,10 +24,13 @@ class ClubRecruitSerializer(serializers.ModelSerializer):
 
 class ClubRecruitListSerializer(serializers.ModelSerializer):
     d_day = serializers.SerializerMethodField()
+    category = serializers.CharField(source='club.category')
+    frequency = serializers.CharField(source='club.frequency')
+    name = serializers.CharField(source='club.full_name')
 
     class Meta:
         model = ClubRecruit
-        fields = ['image', 'title', 'category', 'style', 'frequency', 'created_at', 'updated_at', 'end_doc', 'd_day']
+        fields = ['image','name', 'title', 'category', 'style', 'frequency', 'created_at', 'updated_at', 'end_doc', 'd_day']
 
     def get_d_day(self, obj):
         d_day = (obj.end_doc - date.today()).days

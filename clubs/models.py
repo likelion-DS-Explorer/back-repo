@@ -1,6 +1,10 @@
 from django.db import models
 from multiselectfield import MultiSelectField
 from django.contrib.auth import get_user_model
+from django.conf import settings
+
+import os
+import json
 
 class Club(models.Model):
     CATEGORY_CHOICES = [
@@ -41,7 +45,8 @@ class Club(models.Model):
         ('one_time', '1회 납부')
     ]
 
-    name = models.CharField(max_length=20, unique=True)
+    code = models.CharField(max_length=20, unique=True)
+    full_name = models.CharField(max_length=50, default='')
     category = models.CharField(max_length=15, choices=CATEGORY_CHOICES)
 
     frequency = models.CharField(max_length=20)
@@ -64,8 +69,21 @@ class Club(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        json_path = os.path.join(settings.BASE_DIR, 'club.json')
+
+        with open(json_path, 'r', encoding='utf-8') as file:
+            clubs_data = json.load(file)
+            for club in clubs_data:
+                if club['code'] == self.code:
+                    self.full_name = club['name']
+                    break
+
+        print(self)
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.name
+        return self.full_name
     
 class ClubLike(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)

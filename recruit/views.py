@@ -46,4 +46,4 @@ class RecruitScrapViewSet(viewsets.ModelViewSet):
             status_code = status.HTTP_201_CREATED
 
         recruit.refresh_from_db()
-        return Response({"message": message, "scrap_count": recruit.scrap_count}, status=status_code)
+        return Response({"message": message, "scraps_count": recruit.scraps_count}, status=status_code)
