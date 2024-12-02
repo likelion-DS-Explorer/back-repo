@@ -3,7 +3,6 @@ from django.db import models
 from django.core.validators import MinLengthValidator, MaxLengthValidator
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
-from multiselectfield import MultiSelectField
 
 import json
 from pathlib import Path
@@ -44,14 +43,13 @@ class Profile(AbstractUser):
     name = models.CharField(max_length=10)
     major = models.CharField(max_length=15)
     student_id = models.CharField(max_length=8, validators=[MinLengthValidator(8), MaxLengthValidator(8)], unique=True)
-    nickname = models.CharField(max_length=50, unique=True)
+    nickname = models.CharField(max_length=50)
     cp_number = models.CharField(max_length=11, validators=[MinLengthValidator(11), MaxLengthValidator(11)])
     image = models.ImageField(upload_to='upload_filepath', default='default.png')
-    is_manager = MultiSelectField(max_length=20, blank=True, choices=CLUB_CHOICES)
+    is_manager = models.CharField(max_length=20, blank=True, choices=CLUB_CHOICES)
     club = models.CharField(max_length=20, blank=True, choices=CLUB_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

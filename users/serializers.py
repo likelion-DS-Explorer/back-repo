@@ -9,7 +9,8 @@ from clubs.models import Club
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    is_manager = serializers.MultipleChoiceField(choices=Profile.CLUB_CHOICES)
+    #is_manager = serializers.MultipleChoiceField(choices=Profile.CLUB_CHOICES)
+    
     class Meta:
         model = Profile
         fields = ('email', 'password', 'nickname', 'name', 'major', 'student_id', 'cp_number', 'is_manager')
