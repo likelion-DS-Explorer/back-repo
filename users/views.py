@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from .models import Profile
 from rest_framework import generics, status, viewsets
-from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer, editPostSerialzier,UserClubSerializer
-from django.contrib.auth import authenticate, update_session_auth_hash
+from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer, editPostSerialzier, UserClubSerializer
+from django.contrib.auth import authenticate
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
@@ -10,6 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from news.permissions import IsManagerOrReadOnly
 from news.models import News
 from recruit.models import ClubRecruit
+from itertools import chain
+from operator import attrgetter
 
 # 회원가입 뷰
 class RegisterView(generics.CreateAPIView):
@@ -63,15 +65,28 @@ class editPostViewset(viewsets.ModelViewSet):
             status=status.HTTP_404_NOT_FOUND
         )
     
-        return list(news) + list(recruits)
+        combined_queryset = sorted(
+            chain(news, recruits),
+            key=attrgetter('created_at'),
+            reverse=True  # 내림차순 정렬
+        )
+        return combined_queryset
 
     def list(self, request, student_id=None):
-        serializer = self.get_serializer(self.get_queryset(), many=True)
+        queryset = self.get_queryset()
+        if not queryset:
+            return Response(
+                {"error": "관련 게시글이 존재하지 않습니다."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        serializer = self.get_serializer(queryset, many=True)
         return Response(
             {"message": "수정 가능 게시글 조회에 성공하였습니다.", "result": serializer.data},
             status=status.HTTP_200_OK
         )
 
+            
+# 내가 속한 동아리
 class UserClubsView(generics.GenericAPIView):
     serializer_class = UserClubSerializer
     permission_classes = [IsAuthenticated]

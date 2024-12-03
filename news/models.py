@@ -6,14 +6,16 @@ class News(models.Model):
         ("News_to_come", "다가올 소식"),
         ("Last_news", "지난 소식")
     ]
-
+    club = models.ForeignKey('clubs.Club', on_delete=models.CASCADE,
+                            null=True, blank=True, related_name='club_news')
+    club_code = models.CharField(max_length=20, null=True, blank=True)
     title = models.CharField(max_length=80)
     content = models.TextField()
     news_type = models.CharField(max_length=15, choices=NEWS_CHOICES)
     image = models.ImageField(upload_to='upload_filepath', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='news')
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='news_author')
 
     def __str__(self):
         return self.title

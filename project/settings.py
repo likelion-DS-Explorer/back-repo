@@ -33,8 +33,10 @@ DEBUG = env('DEBUG')
 
 
 # Application definition
+AUTH_USER_MODEL = 'users.Profile'
 
 INSTALLED_APPS = [
+    'users',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,7 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'users',
     'recruit',
     'news',
     'clubs',
@@ -106,8 +107,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-AUTH_USER_MODEL = 'users.Profile'
 
 
 # Password validation

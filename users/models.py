@@ -1,5 +1,5 @@
-from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MinLengthValidator, MaxLengthValidator
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
@@ -50,6 +50,9 @@ class Profile(AbstractUser):
     club = models.CharField(max_length=20, blank=True, choices=CLUB_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    club_recruit = models.ForeignKey('recruit.ClubRecruit', on_delete=models.SET_NULL, null=True, blank=True, related_name='club_recruit')
+    news = models.ForeignKey('news.News', on_delete=models.SET_NULL, null=True, blank=True, related_name='club_news')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

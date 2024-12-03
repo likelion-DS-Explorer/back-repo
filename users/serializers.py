@@ -6,6 +6,8 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from clubs.models import Club
+from news.models import News
+from recruit.models import ClubRecruit
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -89,6 +91,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 # 수정 가능 게시물 조회
 class editPostSerialzier(serializers.ModelSerializer):
     post_type = serializers.SerializerMethodField()
+    club_title = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
     updated_at = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
@@ -96,7 +99,14 @@ class editPostSerialzier(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['id', 'post_type', 'title', 'status', 'created_at', 'updated_at']
+        fields = ['id', 'post_type', 'title', 'club_title','status', 'created_at', 'updated_at']
+
+    def get_club_title(self, obj):
+        if isinstance(obj, ClubRecruit):
+            return obj.club.code if obj.club else None
+        elif isinstance(obj, News):
+            return obj.club_code
+        return None
 
     def get_post_type(self, obj):
         if hasattr(obj, 'news_type'):
@@ -125,31 +135,42 @@ class editPostSerialzier(serializers.ModelSerializer):
     def get_updated_at(self, obj):
         return obj.updated_at
 
+
 # 내가 속한 동아리
 class UserClubSerializer(serializers.ModelSerializer):
-    #join_date = serializers.SerializerMethodField()
+    join_date = serializers.DateField(source='club_recruit')
     role = serializers.SerializerMethodField()
     club = serializers.SerializerMethodField()
-    category = serializers.SerializerMethodField()
-    #activity_period = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField(source='clubs.club.category')
+    activity_period = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['role', 'club', 'category']
-
+        fields = ['join_date', 'role', 'club', 'category', 'activity_period']
+    
+    def get_join_date(self, obj):
+        if hasattr(obj, 'club_recruit') and obj.club_recruit:
+            return obj.club_recruit.end_interview
+        return None
+        
     def get_role(self, obj):
         if obj.is_manager:
             return '운영진'
-        elif obj.club:
+        else:
             return '회원'
         return None
 
     def get_category(self, obj):
-        if hasattr(obj, 'category'):
-            return obj.category.name
+        if hasattr(obj,'category') and obj.club:
+            return obj.club.category.name
         return None
 
     def get_club(self, obj):
         if obj.club:
             return [{'name': obj.club}]
         return []
+
+    def get_activity_period(self, obj):
+        if hasattr(obj,'activity_period'):
+            return obj.activity_period
+        return None
