@@ -10,8 +10,6 @@ from rest_framework.permissions import IsAuthenticated
 from news.permissions import IsManagerOrReadOnly
 from news.models import News
 from recruit.models import ClubRecruit
-from itertools import chain
-from operator import attrgetter
 
 # 회원가입 뷰
 class RegisterView(generics.CreateAPIView):

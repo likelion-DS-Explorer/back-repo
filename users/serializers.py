@@ -120,7 +120,7 @@ class editPostSerialzier(serializers.ModelSerializer):
         if hasattr(obj, 'news_type'):
             return "공개"
         elif hasattr(obj, 'end_doc'):
-            if obj.end_doc < now:
+            if obj.end_interview < now:
                 return "모집 종료"
             else:
                 return "공개"
@@ -138,10 +138,10 @@ class editPostSerialzier(serializers.ModelSerializer):
 
 # 내가 속한 동아리
 class UserClubSerializer(serializers.ModelSerializer):
-    join_date = serializers.DateField(source='club_recruit')
+    join_date = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     club = serializers.SerializerMethodField()
-    category = serializers.SerializerMethodField(source='clubs.club.category')
+    category = serializers.SerializerMethodField()
     activity_period = serializers.SerializerMethodField()
 
     class Meta:
@@ -149,7 +149,7 @@ class UserClubSerializer(serializers.ModelSerializer):
         fields = ['join_date', 'role', 'club', 'category', 'activity_period']
     
     def get_join_date(self, obj):
-        if hasattr(obj, 'club_recruit') and obj.club_recruit:
+        if obj.club_recruit:
             return obj.club_recruit.end_interview
         return None
         
@@ -161,8 +161,12 @@ class UserClubSerializer(serializers.ModelSerializer):
         return None
 
     def get_category(self, obj):
-        if hasattr(obj,'category') and obj.club:
-            return obj.club.category.name
+        if obj.club:
+            try:
+                club = Club.objects.get(code=obj.club)
+                return club.category
+            except Club.DoesNotExist:
+                return None
         return None
 
     def get_club(self, obj):
