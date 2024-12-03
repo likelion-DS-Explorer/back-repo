@@ -4,10 +4,11 @@ from django.contrib.auth.password_validation import validate_password
 from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
+from django.utils import timezone
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    
+    is_manager = serializers.MultipleChoiceField(choices=Profile.CLUB_CHOICES)
     class Meta:
         model = Profile
         fields = ('email', 'password', 'nickname', 'name', 'major', 'student_id', 'cp_number', 'is_manager')
@@ -81,3 +82,42 @@ class ProfileSerializer(serializers.ModelSerializer):
         instance.created_at = validated_data.get("created_at", instance.created_at)
         instance.save()
         return instance
+
+# 수정 가능 게시물 조회
+class editPostSerialzier(serializers.ModelSerializer):
+    post_type = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+    updated_at = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ['id', 'post_type', 'title', 'status', 'created_at', 'updated_at']
+
+    def get_post_type(self, obj):
+        if hasattr(obj, 'news_type'):
+            return '활동 소식'
+        elif hasattr(obj, 'style'):
+            return '모집 공고'
+        return None
+
+    def get_status(self, obj):
+        now = timezone.now().date()
+        if hasattr(obj, 'news_type'):
+            return "공개"
+        elif hasattr(obj, 'end_doc'):
+            if obj.end_doc < now:
+                return "모집 종료"
+            else:
+                return "공개"
+        return "비공개"
+
+    def get_title(self, obj):
+        return obj.title
+
+    def get_created_at(self, obj):
+        return obj.created_at
+
+    def get_updated_at(self, obj):
+        return obj.updated_at

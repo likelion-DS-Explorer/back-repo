@@ -2,6 +2,7 @@
 
 import django.core.validators
 import django.utils.timezone
+import multiselectfield.db.fields
 from django.db import migrations, models
 
 
@@ -27,7 +28,7 @@ class Migration(migrations.Migration):
                 ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
                 ('email', models.EmailField(max_length=254, unique=True, verbose_name='email address')),
-                ('name', models.CharField(max_length=10)),
+                ('name', models.CharField(max_length=10, unique=True)),
                 ('major', models.CharField(max_length=15)),
                 ('student_id', models.CharField(max_length=8, unique=True, validators=[django.core.validators.MinLengthValidator(8), django.core.validators.MaxLengthValidator(8)])),
                 ('nickname', models.CharField(max_length=50)),
