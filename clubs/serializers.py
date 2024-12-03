@@ -14,16 +14,26 @@ class ClubSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context["request"].user
         is_manager = user.is_manager
+        code = validated_data.get('code')
 
         if not is_manager:
-            raise serializers.ValidationError("해당 동아리에 대해 동아리 탐험 글을 생성할 권한이 없습니다.")
+            raise serializers.ValidationError("동아리 탐험 글을 생성할 권한이 없습니다.")
 
-        if Club.objects.filter(name=is_manager).exists():
+        # if code != is_manager: 
+        #     raise serializers.ValidationError("해당 동아리에 대한 권한이 없습니다.")
+
+        if Club.objects.filter(code=is_manager).exists():
             raise serializers.ValidationError("이미 해당 동아리의 탐험 글이 존재합니다.")
 
-        validated_data["name"] = is_manager
         return super().create(validated_data)
     
+    def update(self, instance, validated_data):
+        user = self.context['request'].user
+        if instance.code != user.is_manager:
+            raise serializers.ValidationError("해당 동아리의 탐험 글을 수정할 권한이 없습니다.")
+
+        return super().update(instance, validated_data)
+
     def get_is_liked(self, obj): # 좋아요 눌렀는지
         request = self.context.get('request')
         if request and request.user.is_authenticated:
@@ -36,7 +46,7 @@ class ClubSerializer(serializers.ModelSerializer):
 class ClubListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Club
-        fields = ['image', 'name', 'created_at', 'updated_at']
+        fields = ['image', 'full_name', 'created_at', 'updated_at']
     
 class ClubLikeSerializer(serializers.ModelSerializer):
     class Meta:

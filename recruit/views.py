@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from news.permissions import IsManagerOrReadOnly
 from django.shortcuts import get_object_or_404
 from .models import *
@@ -11,14 +12,37 @@ from .serializers import *
 class ClubRecruitViewSet(viewsets.ModelViewSet):
     queryset = ClubRecruit.objects.all()
     serializer_class = ClubRecruitSerializer
-    # permission_classes = [AllowAny] # 테스트용
     permission_classes = [IsManagerOrReadOnly]
 
     def perform_create(self, serializer):
+        user = self.request.user
+        is_manager_club = user.is_manager
+        club_code = self.request.data.get("club_code")
+
+        if club_code != is_manager_club:
+            raise PermissionDenied("해당 동아리에 대해 모집 공고를 생성할 권한이 없습니다.")
+
         serializer.save()
 
     def perform_update(self, serializer):
+        user = self.request.user
+        recruit = self.get_object()
+
+        if recruit.club_code != user.is_manager:
+            raise PermissionDenied("해당 동아리에 대해 모집 공고를 수정할 권한이 없습니다.")
+        
         serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.request.user
+        recruit = self.get_object()
+
+        if recruit.club_code != user.is_manager:
+            raise PermissionDenied("해당 동아리에 대해 모집 공고를 삭제할 권한이 없습니다.")
+            
+        recruit.delete()
+        return Response({"message": "모집 공고가 삭제되었습니다."},
+                        status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, pk=None):
         queryset = self.get_queryset()
@@ -46,4 +70,4 @@ class RecruitScrapViewSet(viewsets.ModelViewSet):
             status_code = status.HTTP_201_CREATED
 
         recruit.refresh_from_db()
-        return Response({"message": message, "scrap_count": recruit.scrap_count}, status=status_code)
+        return Response({"message": message, "scraps_count": recruit.scraps_count}, status=status_code)
