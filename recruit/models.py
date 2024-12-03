@@ -24,7 +24,8 @@ class ClubRecruit(models.Model):
 
     club = models.ForeignKey('clubs.Club', on_delete=models.CASCADE,
                             null=True, blank=True, related_name='club')
-    
+    club_code = models.CharField(max_length=20, null=True, blank=True)
+
     style = models.CharField(max_length=15, choices=STYLE_CHOICES)
 
     apply_method = models.CharField(max_length=15, choices=APPLY_METHOD_CHOICES)
@@ -44,7 +45,16 @@ class ClubRecruit(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.title
+        return f"{self.title} - {self.club_code} 공고"
+    
+    def save(self, *args, **kwargs):
+        if self.club_code and not self.club:
+            try:
+                self.club = Club.objects.get(code=self.club_code)
+            except Club.DoesNotExist:
+                raise ValueError("해당 동아리 정보를 먼저 등록해야 합니다.")
+        
+        super().save(*args, **kwargs)
     
 class RecruitScrap(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
