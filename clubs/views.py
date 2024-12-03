@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from news.permissions import IsManagerOrReadOnly
 from django.shortcuts import get_object_or_404
 from .models import *
@@ -17,26 +18,40 @@ class ClubViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         is_manager_club = user.is_manager
-        club_name = self.request.data.get("name")
+        club_code = self.request.data.get("code")
 
         print(user)
         print(is_manager_club)
-        print(club_name)
+        print(club_code)
 
-        if club_name != is_manager_club:
-            raise serializers.ValidationError("해당 동아리에 대해 동아리 탐험 글을 생성할 권한이 없습니다.")
+        if club_code != is_manager_club:
+            raise PermissionDenied("해당 동아리에 대해 동아리 탐험 글을 생성할 권한이 없습니다.")
 
-        if Club.objects.filter(is_manager_club=club_name).exists():
+        if Club.objects.filter(code=club_code).exists():
             raise serializers.ValidationError("이미 해당 동아리의 탐험 글이 존재합니다.")
+
+        serializer.save()
 
     def perform_update(self, serializer):
         user = self.request.user
         club = self.get_object()
 
-        if club.name != user.is_manager:
-            raise serializers.ValidationError("해당 동아리에 대해 동아리 탐험 글을 생성할 권한이 없습니다.")
+        if club.code != user.is_manager:
+            raise PermissionDenied("해당 동아리에 대해 동아리 탐험 글을 수정할 권한이 없습니다.")
         
         serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.request.user
+        club = self.get_object()
+
+        if club.code != user.is_manager:
+            raise PermissionDenied("해당 동아리에 대해 동아리 탐험 글을 삭제할 권한이 없습니다.")
+        
+                
+        club.delete()
+        return Response({"message": "동아리 탐험 글이 삭제되었습니다."},
+                        status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, pk=None):
         queryset = self.get_queryset()
