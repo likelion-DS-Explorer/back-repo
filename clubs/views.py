@@ -81,26 +81,20 @@ class ClubLikeViewSet(viewsets.ModelViewSet):
         club.refresh_from_db()
         return Response({"message": message, "likes_count": club.likes_count}, status=status_code)
 
-def check_user_membership(user, club_code):
-    return club_code in user.club.split(',') if user.club else False
-
 # 동아리원 추가
 def add_member_to_club(user, club_code):
-    if user.club:
-        user.club += f",{club_code}"
-    else:
-        user.club = club_code
+    club = Club.objects.get(code=club_code)
+    user.clubs.add(club)
     user.save()
     return True
 
 def check_user_membership(user, club_code):
-    return club_code in user.club.split(',') if user.club else False
+    return user.clubs.filter(code=club_code).exists()
 
 # 동아리원 삭제
 def remove_member_from_club(user, club_code):
-    clubs = user.club.split(',')
-    clubs.remove(club_code)
-    user.club = ','.join(clubs) if clubs else ''
+    club = Club.objects.get(code=club_code)
+    user.clubs.remove(club)
     user.save()
 
 # 동아리원
@@ -115,7 +109,8 @@ class AddClubMemberView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         club_code = self.kwargs.get('club_code')
-        return Profile.objects.filter(club=club_code)
+        club = Club.objects.get(code=club_code)
+        return club.club_members.all()
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()

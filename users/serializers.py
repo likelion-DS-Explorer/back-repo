@@ -56,15 +56,20 @@ class LoginSerializer(serializers.Serializer):
             }
         )
 
+class ClubNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Club
+        fields = ('full_name',)
 
 # 프로필 정보 확인
 class ProfileSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
     updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    clubs = ClubNameSerializer(many=True, read_only=True)
 
     class Meta:
         model = Profile
-        fields = ('image', 'name', 'nickname', 'student_id', 'major', 'club', 'created_at', 'updated_at')
+        fields = ('image', 'name', 'nickname', 'student_id', 'major', 'clubs', 'created_at', 'updated_at')
 
     # 닉네임 중복 검사
     def validate_nickname(self, value):

@@ -47,7 +47,7 @@ class Profile(AbstractUser):
     cp_number = models.CharField(max_length=11, validators=[MinLengthValidator(11), MaxLengthValidator(11)])
     image = models.ImageField(upload_to='upload_filepath', default='default.png')
     is_manager = models.CharField(max_length=20, blank=True, choices=CLUB_CHOICES)
-    club = models.CharField(max_length=20, blank=True, choices=CLUB_CHOICES)
+    clubs = models.ManyToManyField('clubs.Club', blank=True, related_name='club_members')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
