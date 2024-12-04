@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from clubs.models import Club
+from users.models import Profile
 
 class ClubRecruit(models.Model):
     STYLE_CHOICES = [
@@ -43,6 +44,8 @@ class ClubRecruit(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='recruit', null=True)
 
     def __str__(self):
         return f"{self.title} - {self.club_code} 공고"

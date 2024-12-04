@@ -5,10 +5,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.utils import timezone
+from clubs.models import Club, ClubUserRecord
+from news.models import News
+from recruit.models import ClubRecruit
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    is_manager = serializers.MultipleChoiceField(choices=Profile.CLUB_CHOICES)
+    #is_manager = serializers.MultipleChoiceField(choices=Profile.CLUB_CHOICES)
+    
     class Meta:
         model = Profile
         fields = ('email', 'password', 'nickname', 'name', 'major', 'student_id', 'cp_number', 'is_manager')
@@ -52,14 +56,20 @@ class LoginSerializer(serializers.Serializer):
             }
         )
 
+class ClubNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Club
+        fields = ('full_name',)
 
 # 프로필 정보 확인
 class ProfileSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    clubs = ClubNameSerializer(many=True, read_only=True)
 
     class Meta:
         model = Profile
-        fields = ('image', 'nickname', 'student_id', 'major', 'created_at')
+        fields = ('image', 'name', 'nickname', 'student_id', 'major', 'clubs', 'created_at', 'updated_at')
 
     # 닉네임 중복 검사
     def validate_nickname(self, value):
@@ -86,6 +96,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 # 수정 가능 게시물 조회
 class editPostSerialzier(serializers.ModelSerializer):
     post_type = serializers.SerializerMethodField()
+    club_title = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
     updated_at = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
@@ -93,7 +104,14 @@ class editPostSerialzier(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['id', 'post_type', 'title', 'status', 'created_at', 'updated_at']
+        fields = ['id', 'post_type', 'title', 'club_title','status', 'created_at', 'updated_at']
+
+    def get_club_title(self, obj):
+        if isinstance(obj, ClubRecruit):
+            return obj.club.code if obj.club else None
+        elif isinstance(obj, News):
+            return obj.club_code
+        return None
 
     def get_post_type(self, obj):
         if hasattr(obj, 'news_type'):
@@ -107,7 +125,7 @@ class editPostSerialzier(serializers.ModelSerializer):
         if hasattr(obj, 'news_type'):
             return "공개"
         elif hasattr(obj, 'end_doc'):
-            if obj.end_doc < now:
+            if obj.end_interview < now:
                 return "모집 종료"
             else:
                 return "공개"
@@ -121,3 +139,36 @@ class editPostSerialzier(serializers.ModelSerializer):
 
     def get_updated_at(self, obj):
         return obj.updated_at
+
+# 내가 속한 동아리
+class UserClubSerializer(serializers.ModelSerializer):
+    clubs = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ['clubs']
+
+    def get_clubs(self, obj):
+        club_records = ClubUserRecord.objects.filter(user=obj).select_related('club')
+
+        club_list = []
+        for record in club_records:
+            club = record.club
+            club_list.append({
+                'name': club.full_name,
+                'code': club.code,
+                'status': '활동 중' if record.leave_date is None else '활동 종료',
+                'join_date': self.format_date(record.join_date),
+                'leave_date': self.format_date(record.leave_date) if record.leave_date else None,
+                'role': self.get_role(obj, club)
+            })
+
+        return club_list
+
+    def get_role(self, obj, club):
+        return '운영진' if club.code in obj.is_manager else '회원'
+
+    def format_date(self, date):
+        if date:
+            return date.strftime('%Y-%m-%d')
+        return None
