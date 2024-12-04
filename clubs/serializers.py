@@ -58,11 +58,17 @@ class AddClubMemberSerializer(serializers.Serializer):
     search_type = serializers.ChoiceField(choices=[('name', '이름'), ('student_id', '학번')])
     search_term = serializers.CharField()
     club_code = serializers.ChoiceField(choices=Profile.CLUB_CHOICES)
+    leave_date = serializers.DateField(format="%Y-%m-%d", required=False, allow_null=True)
 
     def validate_club_code(self, value):
         valid_codes = [choice[0] for choice in Profile.CLUB_CHOICES]
         if value not in valid_codes:
             raise serializers.ValidationError("유효하지 않은 동아리 코드입니다.")
+        return value
+
+    def validate_leave_date(self, value):
+        if value and value < timezone.now().date():
+            raise serializers.ValidationError("탈퇴 날짜는 현재 날짜보다 이전일 수 없습니다.")
         return value
 
 class ProfileViewSerializer(serializers.ModelSerializer):

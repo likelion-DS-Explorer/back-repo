@@ -9,9 +9,10 @@ class ClubRecruitSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClubRecruit
         fields = '__all__'
-        read_only_fields = ('likes_count', 'created_at', 'updated_at', 'is_scrapped', 'club', 'club_code')
+        read_only_fields = ('likes_count', 'created_at', 'updated_at', 'is_scrapped', 'club', 'club_code', 'author')
     
     def create(self, validated_data):
+        validated_data['author'] = self.context['request'].user
         user = self.context["request"].user
         is_manager = user.is_manager
         club_code = validated_data.get('club_code')

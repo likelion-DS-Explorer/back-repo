@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.utils import timezone
-from clubs.models import Club
+from clubs.models import Club, ClubUserRecord
 from news.models import News
 from recruit.models import ClubRecruit
 
@@ -140,46 +140,35 @@ class editPostSerialzier(serializers.ModelSerializer):
     def get_updated_at(self, obj):
         return obj.updated_at
 
-
 # 내가 속한 동아리
 class UserClubSerializer(serializers.ModelSerializer):
-    join_date = serializers.SerializerMethodField()
-    role = serializers.SerializerMethodField()
-    club = serializers.SerializerMethodField()
-    category = serializers.SerializerMethodField()
-    activity_period = serializers.SerializerMethodField()
+    clubs = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['join_date', 'role', 'club', 'category', 'activity_period']
-    
-    def get_join_date(self, obj):
-        if obj.club_recruit:
-            return obj.club_recruit.end_interview
-        return None
-        
-    def get_role(self, obj):
-        if obj.is_manager:
-            return '운영진'
-        else:
-            return '회원'
-        return None
+        fields = ['clubs']
 
-    def get_category(self, obj):
-        if obj.club:
-            try:
-                club = Club.objects.get(code=obj.club)
-                return club.category
-            except Club.DoesNotExist:
-                return None
-        return None
+    def get_clubs(self, obj):
+        club_records = ClubUserRecord.objects.filter(user=obj).select_related('club')
 
-    def get_club(self, obj):
-        if obj.club:
-            return [{'name': obj.club}]
-        return []
+        club_list = []
+        for record in club_records:
+            club = record.club
+            club_list.append({
+                'name': club.full_name,
+                'code': club.code,
+                'status': '활동 중' if record.leave_date is None else '활동 종료',
+                'join_date': self.format_date(record.join_date),
+                'leave_date': self.format_date(record.leave_date) if record.leave_date else None,
+                'role': self.get_role(obj, club)
+            })
 
-    def get_activity_period(self, obj):
-        if hasattr(obj,'activity_period'):
-            return obj.activity_period
+        return club_list
+
+    def get_role(self, obj, club):
+        return '운영진' if club.code in obj.is_manager else '회원'
+
+    def format_date(self, date):
+        if date:
+            return date.strftime('%Y-%m-%d')
         return None

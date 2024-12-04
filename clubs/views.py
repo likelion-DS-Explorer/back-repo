@@ -8,6 +8,7 @@ from news.permissions import IsManagerOrReadOnly
 from django.shortcuts import get_object_or_404
 from .models import *
 from .serializers import *
+from django.utils import timezone
 
 class ClubViewSet(viewsets.ModelViewSet):
     queryset = Club.objects.all()
@@ -84,6 +85,7 @@ class ClubLikeViewSet(viewsets.ModelViewSet):
 # 동아리원 추가
 def add_member_to_club(user, club_code):
     club = Club.objects.get(code=club_code)
+    ClubUserRecord.objects.create(user=user, club=club)
     user.clubs.add(club)
     user.save()
     return True
@@ -94,6 +96,7 @@ def check_user_membership(user, club_code):
 # 동아리원 삭제
 def remove_member_from_club(user, club_code):
     club = Club.objects.get(code=club_code)
+    ClubUserRecord.objects.filter(user=user, club=club, leave_date__isnull=True).update(leave_date=timezone.now())
     user.clubs.remove(club)
     user.save()
 
@@ -161,6 +164,7 @@ class AddClubMemberView(viewsets.ModelViewSet):
 
         try:
             user_to_remove = Profile.objects.get(student_id=student_id)
+            club = Club.objects.get(code=club_code)
             
             if club_code not in request.user.is_manager:
                 return Response({"error": "해당 동아리의 관리자가 아닙니다."}, status=status.HTTP_403_FORBIDDEN)
@@ -170,7 +174,14 @@ class AddClubMemberView(viewsets.ModelViewSet):
 
             remove_member_from_club(user_to_remove, club_code)
             
-            return Response({"message": f"{user_to_remove.name}님을 동아리에서 제거했습니다."}, status=status.HTTP_200_OK)
+            leave_record = ClubUserRecord.objects.filter(user=user_to_remove, club=club).latest('leave_date')
+            
+            return Response({
+                "message": f"{user_to_remove.name}님을 동아리에서 제거했습니다.",
+                "leave_date": leave_record.leave_date
+            }, status=status.HTTP_200_OK)
 
         except Profile.DoesNotExist:
             return Response({"error": "해당 사용자를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+        except Club.DoesNotExist:
+            return Response({"error": "해당 동아리를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)

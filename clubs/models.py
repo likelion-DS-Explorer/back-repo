@@ -112,3 +112,31 @@ class ClubLike(models.Model):
 
     def __str__(self):
         return f"{self.user} → {self.club} 좋아요"
+
+# 동아리원 추가 및 삭제
+class ClubUserRecord(models.Model):
+    user = models.ForeignKey('users.Profile', on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    join_date = models.DateTimeField(auto_now_add=True)
+    leave_date = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        status = "현재 회원" if self.leave_date is None else "탈퇴 회원"
+        return f"{self.user.name} - {self.club.full_name} ({status})"
+
+    @staticmethod
+    def add_member_to_club(user, club_code):
+        club = Club.objects.get(code=club_code)
+        ClubUserRecord.objects.create(user=user, club=club)
+        user.clubs.add(club)
+        user.save()
+        return True
+
+    @staticmethod
+    def remove_member_from_club(user, club_code):
+        club = Club.objects.get(code=club_code)
+        record = ClubUserRecord.objects.get(user=user, club=club, leave_date__isnull=True)
+        record.leave_date = timezone.now()
+        record.save()
+        user.clubs.remove(club)
+        user.save()

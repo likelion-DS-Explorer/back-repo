@@ -87,16 +87,12 @@ class editPostViewset(viewsets.ModelViewSet):
 
             
 # 내가 속한 동아리
-class UserClubsView(generics.GenericAPIView):
+class UserClubsView(generics.RetrieveUpdateAPIView):
     serializer_class = UserClubSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'student_id'
 
-    def get_queryset(self):
-        student_id = self.kwargs.get('student_id')
-        user = get_object_or_404(Profile, student_id=student_id)
-
-    def get(self, request, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs):
         user = request.user
-        serializer = UserClubSerializer(user)
-        return Response({"message":"소속 동아리 조회에 성공했습니다.", "reslut":serializer.data}, status=status.HTTP_201_CREATED)
+        serializer = self.get_serializer(user)
+        return Response({"message": "소속 동아리 조회에 성공했습니다.", "result": serializer.data}, status=status.HTTP_200_OK)
