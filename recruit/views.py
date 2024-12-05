@@ -71,3 +71,25 @@ class RecruitScrapViewSet(viewsets.ModelViewSet):
 
         recruit.refresh_from_db()
         return Response({"message": message, "scraps_count": recruit.scraps_count}, status=status_code)
+    
+class RecruitApplyViewSet(viewsets.ModelViewSet):
+    queryset = RecruitApply.objects.all()
+    serializer_class = RecruitApplySerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=['post'])
+    def apply(self, request, pk=None):
+        recruit = get_object_or_404(ClubRecruit, pk=pk)
+        user = request.user
+
+        try:
+            existing_apply = RecruitApply.objects.get(user=user, recruit=recruit)
+            message = "지원한 공고입니다."
+            status_code = status.HTTP_200_OK
+        except RecruitApply.DoesNotExist:
+            RecruitApply.objects.create(user=user, recruit=recruit)
+            message = "지원하였습니다."
+            status_code = status.HTTP_201_CREATED
+
+        recruit.refresh_from_db()
+        return Response({"message": message}, status=status_code)

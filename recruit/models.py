@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from clubs.models import Club
-from users.models import Profile
 
 class ClubRecruit(models.Model):
     STYLE_CHOICES = [
@@ -27,6 +26,7 @@ class ClubRecruit(models.Model):
                             null=True, blank=True, related_name='club')
     club_code = models.CharField(max_length=20, null=True, blank=True)
 
+    club_field = models.CharField(max_length=100, blank=True, null=True)
     style = models.CharField(max_length=15, choices=STYLE_CHOICES)
 
     apply_method = models.CharField(max_length=15, choices=APPLY_METHOD_CHOICES)
@@ -36,6 +36,8 @@ class ClubRecruit(models.Model):
     start_interview = models.DateField()
     end_interview = models.DateField()
 
+    form_link = models.URLField(blank=True, null=True)
+
     image = models.ImageField(upload_to='upload_filepath', default='default.png')
     title = models.CharField(max_length=80)
     content = models.TextField()
@@ -44,8 +46,6 @@ class ClubRecruit(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    author = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='recruit', null=True)
 
     def __str__(self):
         return f"{self.title} - {self.club_code} 공고"
@@ -66,7 +66,7 @@ class RecruitScrap(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['user', 'recruit'], name='unique_user_recruit')
+            models.UniqueConstraint(fields=['user', 'recruit'], name='unique_user_recruit_scrap')
         ]
 
     def save(self, *args, **kwargs):
@@ -86,3 +86,16 @@ class RecruitScrap(models.Model):
 
     def __str__(self):
         return f"{self.user} → {self.recruit} 스크랩"
+
+class RecruitApply(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    recruit = models.ForeignKey('ClubRecruit', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'recruit'], name='unique_user_recruit_apply')
+        ]
+
+    def __str__(self):
+        return f"{self.user} → {self.recruit} 지원"
