@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from .models import Profile
 from rest_framework import generics, status, viewsets
-from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer, editPostSerialzier, UserClubSerializer
+from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer, editPostSerialzier, UserClubSerializer, applyClubSerializer
 from django.contrib.auth import authenticate
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from news.permissions import IsManagerOrReadOnly
 from news.models import News
-from recruit.models import ClubRecruit
+from recruit.models import ClubRecruit, RecruitApply
 from itertools import chain
 from operator import attrgetter
 
@@ -96,3 +96,14 @@ class UserClubsView(generics.RetrieveUpdateAPIView):
         user = request.user
         serializer = self.get_serializer(user)
         return Response({"message": "소속 동아리 조회에 성공했습니다.", "result": serializer.data}, status=status.HTTP_200_OK)
+
+# 지원 동아리 조회
+class ApplyClubsView(generics.ListAPIView):
+    serializer_class = applyClubSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'student_id'
+
+    def list(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.get_serializer(user)
+        return Response({"message": "지원 동아리 조회에 성공했습니다.", "result": serializer.data}, status=status.HTTP_200_OK)

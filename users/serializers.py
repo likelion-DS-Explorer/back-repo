@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate
 from django.utils import timezone
 from clubs.models import Club, ClubUserRecord
 from news.models import News
-from recruit.models import ClubRecruit
+from recruit.models import ClubRecruit, RecruitApply
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -157,6 +157,7 @@ class UserClubSerializer(serializers.ModelSerializer):
             club_list.append({
                 'name': club.full_name,
                 'code': club.code,
+                'category':club.category,
                 'status': '활동 중' if record.leave_date is None else '활동 종료',
                 'join_date': self.format_date(record.join_date),
                 'leave_date': self.format_date(record.leave_date) if record.leave_date else None,
@@ -172,3 +173,42 @@ class UserClubSerializer(serializers.ModelSerializer):
         if date:
             return date.strftime('%Y-%m-%d')
         return None
+
+class applyClubSerializer(serializers.ModelSerializer):
+    recruit = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RecruitApply
+        fields = ['recruit']
+
+    def get_recruit(self, obj):
+        apply_records = RecruitApply.objects.filter(user=obj).select_related('recruit__club')
+
+        application_list = []
+        for record in apply_records:
+            recruit = record.recruit
+            club = recruit.club if recruit else None
+            application_list.append({
+                'apply_date': self.format_date(record.created_at),
+                'club_name': club.full_name if club else None,
+                'recruit_title': recruit.title if recruit else None,
+                'category': club.category if club else None,
+                'apply_method': recruit.apply_method if recruit else None,
+                'progress_status': self.get_progress_status(recruit),
+                'result_date': recruit.recruit_result,
+                'note': recruit.apply_process if recruit else None
+            })
+
+        return application_list
+
+    def format_date(self, date):
+        return date.strftime('%Y-%m-%d') if date else None
+
+    def get_progress_status(self, recruit):
+        if timezone.now().date() < recruit.recruit_result:
+            return "심사 중"
+        else:
+            return "심사 완료" 
+
+    def get_result_date(self, recruit):
+        return self.format_date(recruit.end_interview) if recruit else None
