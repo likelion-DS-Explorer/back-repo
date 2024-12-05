@@ -10,4 +10,5 @@ router.register('', ClubRecruitViewSet, basename='club-recruit')
 urlpatterns = [
     path('', include(router.urls)),
     path('<int:pk>/scrap/', RecruitScrapViewSet.as_view({'post': 'scrap'}), name='recruit-scrap'),
+    path('<int:pk>/apply/', RecruitApplyViewSet.as_view({'post': 'apply'}), name='recruit-apply'),
 ]
