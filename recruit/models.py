@@ -26,7 +26,7 @@ class ClubRecruit(models.Model):
                             null=True, blank=True, related_name='club')
     club_code = models.CharField(max_length=20, null=True, blank=True)
 
-    club_field = models.CharField(max_length=100, blank=True, null=True)
+    club_field = models.CharField(max_length=100, null=True, blank=True)
     style = models.CharField(max_length=15, choices=STYLE_CHOICES)
 
     apply_method = models.CharField(max_length=15, choices=APPLY_METHOD_CHOICES)
@@ -35,12 +35,13 @@ class ClubRecruit(models.Model):
     end_doc = models.DateField()
     start_interview = models.DateField()
     end_interview = models.DateField()
+    recruit_result = models.DateField()
 
     form_link = models.URLField(blank=True, null=True)
 
     image = models.ImageField(upload_to='upload_filepath', default='default.png')
     title = models.CharField(max_length=80)
-    content = models.TextField()
+    content = models.TextField(blank=True, null=True)
 
     scraps_count = models.PositiveBigIntegerField(default=0)
 
