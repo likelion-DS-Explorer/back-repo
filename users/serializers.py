@@ -194,8 +194,8 @@ class applyClubSerializer(serializers.ModelSerializer):
                 'recruit_title': recruit.title if recruit else None,
                 'category': club.category if club else None,
                 'apply_method': recruit.apply_method if recruit else None,
-                'progress_status': self.get_progress_status(record),
-                'result_date': self.get_result_date(recruit),
+                'progress_status': self.get_progress_status(recruit),
+                'result_date': recruit.recruit_result,
                 'note': recruit.apply_process if recruit else None
             })
 
@@ -204,8 +204,11 @@ class applyClubSerializer(serializers.ModelSerializer):
     def format_date(self, date):
         return date.strftime('%Y-%m-%d') if date else None
 
-    def get_progress_status(self, record):
-        return "진행 중"
+    def get_progress_status(self, recruit):
+        if timezone.now().date() < recruit.recruit_result:
+            return "심사 중"
+        else:
+            return "심사 완료" 
 
     def get_result_date(self, recruit):
         return self.format_date(recruit.end_interview) if recruit else None
