@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from news.permissions import IsManagerOrReadOnly
 from django.shortcuts import get_object_or_404
@@ -13,7 +13,6 @@ from django.utils import timezone
 class ClubViewSet(viewsets.ModelViewSet):
     queryset = Club.objects.all()
     serializer_class = ClubSerializer
-    # permission_classes = [AllowAny] # 테스트용
     permission_classes = [IsManagerOrReadOnly]
 
     def perform_create(self, serializer):
@@ -54,6 +53,27 @@ class ClubViewSet(viewsets.ModelViewSet):
         return Response({"message": "동아리 탐험 글이 삭제되었습니다."},
                         status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=True, methods=['POST'])
+    def delete_images(self, request, pk=None):
+        club = self.get_object()
+        
+        if club.code != request.user.is_manager:
+            raise PermissionDenied("해당 동아리의 이미지를 삭제할 권한이 없습니다.")
+
+        image_urls_to_delete = request.data.get('image_urls', [])
+        
+        deleted_count = club.images.filter(image_url__in=image_urls_to_delete).delete()[0]
+
+        if not club.images.filter(is_thumbnail=True).exists() and club.images.exists():
+            first_image = club.images.first()
+            first_image.is_thumbnail = True
+            first_image.save()
+
+        return Response({
+            "message": f"{deleted_count}개의 이미지가 삭제되었습니다.", 
+            "remaining_images": ClubImageSerializer(club.images.all(), many=True).data
+        }, status=status.HTTP_200_OK)
+    
     def list(self, request, pk=None):
         queryset = self.get_queryset()
         serializer = ClubListSerializer(queryset, many=True)

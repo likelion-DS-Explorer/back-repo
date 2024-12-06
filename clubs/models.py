@@ -6,6 +6,15 @@ from django.conf import settings
 import os
 import json
 
+class ClubImage(models.Model):
+    club = models.ForeignKey('Club', related_name='images', on_delete=models.CASCADE)
+    image_url = models.URLField(max_length=500)
+    is_thumbnail = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.club.full_name} - {self.image_url}"
+    
 class Club(models.Model):
     CATEGORY_CHOICES = [
         ('music', '공연ꞏ음악'),
@@ -59,7 +68,6 @@ class Club(models.Model):
     fee_type = models.CharField(max_length=15, choices=FEE_TYPE_CHOICES)
     fee = models.PositiveIntegerField()
 
-    image = models.ImageField(upload_to='upload_filepath', default='default.png')
     content = models.TextField()
 
     likes_count = models.PositiveBigIntegerField(default=0)

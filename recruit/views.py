@@ -43,6 +43,27 @@ class ClubRecruitViewSet(viewsets.ModelViewSet):
         recruit.delete()
         return Response({"message": "모집 공고가 삭제되었습니다."},
                         status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=True, methods=['POST'])
+    def delete_images(self, request, pk=None):
+        clubrecruit = self.get_object()
+        
+        if clubrecruit.code != request.user.is_manager:
+            raise PermissionDenied("해당 동아리의 이미지를 삭제할 권한이 없습니다.")
+
+        image_urls_to_delete = request.data.get('image_urls', [])
+        
+        deleted_count = clubrecruit.images.filter(image_url__in=image_urls_to_delete).delete()[0]
+
+        if not clubrecruit.images.filter(is_thumbnail=True).exists() and club.images.exists():
+            first_image = clubrecruit.images.first()
+            first_image.is_thumbnail = True
+            first_image.save()
+
+        return Response({
+            "message": f"{deleted_count}개의 이미지가 삭제되었습니다.", 
+            "remaining_images": ClubRecruitImageSerializer(clubrecruit.images.all(), many=True).data
+        }, status=status.HTTP_200_OK)
 
     def list(self, request, pk=None):
         queryset = self.get_queryset()
