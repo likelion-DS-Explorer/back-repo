@@ -94,7 +94,7 @@ class ClubSerializer(serializers.ModelSerializer):
 class ClubListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Club
-        fields = ['image', 'full_name', 'created_at', 'updated_at']
+        fields = ['full_name', 'created_at', 'updated_at']
     
 class ClubLikeSerializer(serializers.ModelSerializer):
     class Meta:

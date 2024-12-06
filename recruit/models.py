@@ -2,6 +2,15 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from clubs.models import Club
 
+class ClubRecruitImage(models.Model):
+    clubrecruit = models.ForeignKey('ClubRecruit', related_name='images', on_delete=models.CASCADE)
+    image_url = models.URLField(max_length=500)
+    is_thumbnail = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.clubrecruit.title} - {self.image_url}"
+    
 class ClubRecruit(models.Model):
     STYLE_CHOICES = [
         ('project', '프로젝트 및 대외 활동'),
@@ -39,7 +48,6 @@ class ClubRecruit(models.Model):
 
     form_link = models.URLField(blank=True, null=True)
 
-    image = models.ImageField(upload_to='upload_filepath', default='default.png')
     title = models.CharField(max_length=80)
     content = models.TextField(blank=True, null=True)
 
