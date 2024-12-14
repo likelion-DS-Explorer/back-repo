@@ -56,6 +56,8 @@ class ClubRecruit(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    author = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name='recruit_author')
+
     def __str__(self):
         return f"{self.title} - {self.club_code} 공고"
     
