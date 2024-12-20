@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from datetime import date
+from clubs.models import ClubImage
 
 class ClubRecruitImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -145,9 +146,19 @@ class ClubRecruitListSerializer(serializers.ModelSerializer):
         return d_day if d_day >=0 else "마감"
     
 class RecruitScrapSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = RecruitScrap
-        fields = ['id', 'user', 'recruit', 'created_at']
+        fields = ['id', 'user', 'recruit', 'created_at', 'image']
+
+    def get_image(self, obj):
+        club_image = ClubImage.objects.filter(club=obj.recruit.club).first()
+        if club_image:
+            return club_image.image_url
+        return None
+
+
 
 class RecruitApplySerializer(serializers.ModelSerializer):
     class Meta:

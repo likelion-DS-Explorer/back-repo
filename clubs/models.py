@@ -94,7 +94,7 @@ class Club(models.Model):
         return self.full_name
     
 class ClubLike(models.Model):
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name="liked_club")
     club = models.ForeignKey('Club', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
