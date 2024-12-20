@@ -10,6 +10,10 @@ from rest_framework.permissions import IsAuthenticated
 from news.permissions import IsManagerOrReadOnly
 from news.models import News
 from recruit.models import ClubRecruit, RecruitApply
+from clubs.serializers import ClubLikeSerializer
+from recruit.serializers import RecruitScrapSerializer
+from clubs.models import ClubLike
+from recruit.models import RecruitScrap
 from itertools import chain
 from operator import attrgetter
 
@@ -26,7 +30,18 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token = serializer.validated_data
-        return Response({"message":"로그인 성공", "token":token.key}, status=status.HTTP_200_OK)
+        user = token.user 
+
+        user_data = {
+            'email': user.email,
+            'nickname': user.nickname,
+            'name': user.name,
+            'major': user.major,
+            'student_id': user.student_id,
+            'cp_number': user.cp_number,
+            'is_manager': user.is_manager
+        }
+        return Response({"message":"로그인 성공", "token":token.key, "user":user_data}, status=status.HTTP_200_OK)
 
 # 로그아웃 뷰
 class LogoutView(APIView):
@@ -46,6 +61,32 @@ class ProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         student_id = self.kwargs.get('student_id')
         return get_object_or_404(Profile, student_id=student_id)
+
+# 관심 동아리 리스트
+class likeClubListView(generics.ListAPIView):
+    serializer_class = ClubLikeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return ClubLike.objects.filter(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"message": "관심 동아리 조회에 성공했습니다.", "result": serializer.data}, status=status.HTTP_200_OK)
+
+# 공고 스크랩 리스트
+class recruitScrapListView(generics.ListAPIView):
+    serializer_class = RecruitScrapSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return RecruitScrap.objects.filter(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"message": "공고 스크랩 조회에 성공했습니다.", "result": serializer.data}, status=status.HTTP_200_OK)
 
 # 수정 가능 게시글 조회
 class editPostViewset(viewsets.ModelViewSet):

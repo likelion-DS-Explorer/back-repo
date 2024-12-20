@@ -71,7 +71,7 @@ class ClubRecruit(models.Model):
         super().save(*args, **kwargs)
     
 class RecruitScrap(models.Model):
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.ForeignKey('users.Profile', on_delete=models.CASCADE, related_name="scraped_recruit")
     recruit = models.ForeignKey('ClubRecruit', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 

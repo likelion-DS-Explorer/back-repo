@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from users.models import Profile
+from users.serializers import ProfileSerializer
 
 class ClubImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -97,9 +98,19 @@ class ClubListSerializer(serializers.ModelSerializer):
         fields = ['full_name', 'created_at', 'updated_at']
     
 class ClubLikeSerializer(serializers.ModelSerializer):
+    user = ProfileSerializer(source='profile.user', read_only=True)
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = ClubLike
-        fields = ['id', 'user', 'club', 'created_at']
+        fields = ['id', 'user', 'club', 'image','created_at']
+
+    def get_image(self, obj):
+        club_image = ClubImage.objects.filter(club=obj.club).first()
+        if club_image:
+            return club_image.image_url
+        return None
+
 
 # 동아리원 추가
 class AddClubMemberSerializer(serializers.Serializer):
